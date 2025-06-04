@@ -1,7 +1,7 @@
 
 # Python codes for MD simulation analysis
 
-A collection of Python scripts for computing (physical) properties and analyzing trajectories from
+A collection of Python scripts for computing physical properties and analyzing trajectories from
 molecular dynamics (MD) simulations.
 
 ## visco.py
