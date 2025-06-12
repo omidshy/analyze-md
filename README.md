@@ -31,7 +31,7 @@ function over time following the Green--Kubo approach
 
 $$
 \eta = \frac{V}{k_B T} \int_0^\infty \left\langle P_{\alpha \beta} \left( t \right)
-\cdot P_{\alpha \beta} \left( t_0 \right) \right\rangle_t dt
+\cdot P_{\alpha \beta} \left( t_0 \right) \right\rangle dt
 $$
 
 or the Einstein approach
@@ -54,7 +54,7 @@ or the Einstein approach
 
 $$
 \eta = \lim_{t \to \infty} \frac{V}{2 t k_B T}
-\left\langle \left( \int_0^\infty P_{\alpha \beta}(t') dt' \right)^2  \right\rangle_t
+\left\langle \left( \int_0^\infty P_{\alpha \beta}(t') dt' \right)^2  \right\rangle
 $$
 
 where *V* is the simulation box volume, *k<sub>B</sub>* is the Boltzmann constant, *T* is temperature,
@@ -90,7 +90,7 @@ using the following Green-Kubo relation
 </picture>-->
 
 $$
-D = \frac{1}{3} \int_0^\infty \left\langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(t_0) \right\rangle_i,t dt
+D = \frac{1}{3} \int_0^\infty \left\langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(t_0) \right\rangle dt
 $$
 
 where ***v**<sub>i</sub>(t)* denotes the velocity of particle *i* at any specific time *t*.
