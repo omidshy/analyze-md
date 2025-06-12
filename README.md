@@ -13,7 +13,7 @@ determined from the integral of the pressure tensor elements or their auto-corre
 The viscosity, *η*, is calculated from the integral of the pressure tensor auto-correlation
 function over time following the Green--Kubo approach
 
-<picture>
+<!--<picture>
   <source
     media="(prefers-color-scheme: dark)"
     srcset="assets/visco_gk_dark.png"
@@ -27,16 +27,16 @@ function over time following the Green--Kubo approach
     src="assets/visco_gk_light.png"
     height="45"
   />
-</picture>
+</picture>-->
 
 $$
 \eta = \frac{V}{k_B T} \int_0^\infty \left\langle P_{\alpha \beta} \left( t \right)
-\cdot P_{\alpha \beta} \left( t_0 \right) \right\rangle dt
+\cdot P_{\alpha \beta} \left( t_0 \right) \right\rangle_t dt
 $$
 
 or the Einstein approach
 
-<picture>
+<!--<picture>
   <source
     media="(prefers-color-scheme: dark)"
     srcset="assets/visco_en_dark.png"
@@ -50,12 +50,12 @@ or the Einstein approach
     src="assets/visco_en_light.png"
     height="58"
   />
-</picture>
+</picture>-->
 
-<!--$$
+$$
 \eta = \lim_{t \to \infty} \frac{V}{2 t k_B T}
-\left\langle \left( \int_0^\infty P_{\alpha \beta}(t') dt' \right)^2  \right\rangle
-$$-->
+\left\langle \left( \int_0^\infty P_{\alpha \beta}(t') dt' \right)^2  \right\rangle_t
+$$
 
 where *V* is the simulation box volume, *k<sub>B</sub>* is the Boltzmann constant, *T* is temperature,
 *P<sub>αβ</sub>* denotes the off-diagonal element *αβ* of the pressure tensor,
@@ -73,7 +73,7 @@ Calculates self-diffusion coefficient from particle velocities. The self-diffusi
 computed from an exponential fit to the running integral of velocity auto-correlation function (VACF)
 using the following Green-Kubo relation
 
-<picture>
+<!--<picture>
   <source
     media="(prefers-color-scheme: dark)"
     srcset="assets/sdc_gk_dark.png"
@@ -87,11 +87,11 @@ using the following Green-Kubo relation
     src="assets/sdc_gk_light.png"
     height="45"
   />
-</picture>
+</picture>-->
 
-<!--$$
-D = \frac{1}{3} \int_0^\infty \left\langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(t_0) \right\rangle dt
-$$-->
+$$
+D = \frac{1}{3} \int_0^\infty \left\langle \mathbf{v}_i(t) \cdot \mathbf{v}_i(t_0) \right\rangle_i,t dt
+$$
 
 where ***v**<sub>i</sub>(t)* denotes the velocity of particle *i* at any specific time *t*.
 
