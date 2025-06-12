@@ -29,10 +29,10 @@ function over time following the Green--Kubo approach
   />
 </picture>
 
-<!--$$
+$$
 \eta = \frac{V}{k_B T} \int_0^\infty \left\langle P_{\alpha \beta} \left( t \right)
 \cdot P_{\alpha \beta} \left( t_0 \right) \right\rangle dt
-$$-->
+$$
 
 or the Einstein approach
 
