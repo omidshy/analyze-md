@@ -120,9 +120,7 @@ are the mean squared velocities of all particles of type $i$ and $j$, respective
 $\left\langle \mathbf{v}_j(t) \cdot \mathbf{v}_i(0) \right\rangle$ is a restricted
 statistical average defined as
 
-$$
-\frac{1}{N} \left\langle \sum_{j}^{} \mathbf{v}_j(t) \cdot \mathbf{v}_i(0) \cdot u( R - r_{ij}(0) ) \right\rangle
-$$
+$\frac{1}{N} \left\langle \sum_{j} \mathbf{v}_j(t) \cdot \mathbf{v}_i(0) \cdot u( R - r_{ij}(0) ) \right\rangle$
 
 where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
 particle $i$ and a particle $j$, and $N$ is the mean number of $j$
