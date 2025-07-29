@@ -121,7 +121,9 @@ $\left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle$ is a 
 statistical average defined as
 
 $$
-\frac{1}{N} \left\langle \sum_j \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \cdot u(R - r_{ij}(0)) \right\rangle,
+\left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle =
+\frac{1}{N} \left\langle \sum_j \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0)
+\cdot u(R - r_{ij}(0)) \right\rangle,
 $$
 
 where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
