@@ -121,8 +121,7 @@ $\left\langle \mathbf{v}_j(t) \cdot \mathbf{v}_i(0) \right\rangle$ is a restrict
 statistical average defined as
 
 $$
-\frac{1}{N} \left\langle \sum_{j} \mathbf{v}_j(t) \cdot \mathbf{v}_i(0)
-\cdot u \left( R - r_{ij}(0) \right) \right\rangle
+\frac{1}{N} \left\langle \sum_{j}^{} \mathbf{v}_j(t) \cdot \mathbf{v}_i(0) \cdot u( R - r_{ij}(0) ) \right\rangle
 $$
 
 where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
