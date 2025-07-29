@@ -122,7 +122,7 @@ statistical average defined as
 
 $$
 \frac{1}{N} \left\langle \sum_{j} \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0)
-\cdot u \left( R - r_{ij}(0) \right) \right\rangle,
+\cdot u \left( R - r_{ij}(0) \right) \right\rangle ,
 $$
 
 where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
@@ -134,5 +134,5 @@ their center-of-mass radial distribution function.
 Usage: `python vccf.py -h`
 
 > [!TIP]
-> Example data files, particle_a.data and particle_b.data, is available in the example directory.
+> Example data files, particle_a.data and particle_b.data, are available in the example directory.
 > The required values to run the example can be found in the md.param file.
