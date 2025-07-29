@@ -111,7 +111,7 @@ radius *R* around the particle of type *i*, can be defined as
 
 $$
 C(t) = \frac{ \left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle }
-{ \left( \left\langle v_i^2 \right\rangle \left\langle v_j^2 \right\rangle \right) ^{1/2} },
+{ \left( \left\langle v_i^2 \right\rangle \left\langle v_j^2 \right\rangle \right) ^{1/2} }
 $$
 
 where $\boldsymbol{v}_i(t)$ and $\boldsymbol{v}_j(t)$ are the velocity of the particles $i$
@@ -121,8 +121,7 @@ $\left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle$ is a 
 statistical average defined as
 
 $$
-\frac{1}{N} \left\langle \sum_{j} \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0)
-\cdot u \left( R - r_{ij}(0) \right) \right\rangle ,
+\frac{1}{N} \left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \cdot u \left( R - r_{ij}(0) \right) \right\rangle
 $$
 
 where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
