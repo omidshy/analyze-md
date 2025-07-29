@@ -121,16 +121,15 @@ $\left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle$ is a 
 statistical average defined as
 
 $$
-\left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle =
-\frac{1}{N} \left\langle \sum_j \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0)
-\cdot u(R - r_{ij}(0)) \right\rangle,
+\frac{1}{N} \left\langle \sum_{j} \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0)
+\cdot u \left( R - r_{ij}(0) \right) \right\rangle,
 $$
 
 where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
 particle $i$ and a particle $j$, and $N$ is the mean number of $j$
 particles in the spherical shell of a particle $i$.
 The cutoff radius $R$ for species $i$ and $j$ is usually set to the position of the first minimum of
-their center-of-mass radial distribution function (RDF).
+their center-of-mass radial distribution function.
 
 Usage: `python vccf.py -h`
 
