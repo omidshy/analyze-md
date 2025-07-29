@@ -13,3 +13,14 @@ number of steps in the velocity.data file: 1000
 number of particles: 128
 unit of velocity: A/fs
 timestep: 0.01 ps
+
+
+For velocity cross-correlation function example:
+
+number of steps in the data files: 20000
+number of A particles: 8
+number of B particles: 28
+timestep: 0.0005 ps
+box-size: [16.2288 16.2288 16.2288]
+rmax: {A-A = 4.2, A-B = 3.6, B-B = 6.2}
+

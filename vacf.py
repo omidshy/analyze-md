@@ -157,7 +157,7 @@ if __name__ == "__main__":
     # Print the parsed command-line arguments
     print(f"Using velocity data file: {args.datafile.name}")
     print(f"Velocity unit: {args.unit}")
-    print(f"Number of steps: {args.steps}")
+    print(f"Number of steps to read: {args.steps}")
     print(f"Number of particles: {args.particles}")
     print(f"Timestep: {args.timestep} ps")
 

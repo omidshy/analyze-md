@@ -100,3 +100,39 @@ Usage: `python vacf.py -h`
 > [!TIP]
 > An example data file, velocity.data, is available in the example directory.
 > The required values to run the example can be found in the md.param file.
+
+## vccf.py
+
+The collective dynamics of different particles in a MD simulation can be investigated
+through velocity cross-correlation functions.
+The time cross-correlation function between the initial velocity of a particle of type *i* and
+the latter velocities of particles of type *j*, initially located inside a spherical shell of
+radius *R* around the particle of type *i*, can be defined as
+
+$$
+C(t) = \frac{ \left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle _r }
+{ \left( \left\langle v_i^2 \right\rangle \left\langle v_j^2 \right\rangle \right) ^{1/2} },
+$$
+
+where $\boldsymbol{v}_i(t)$ and $\boldsymbol{v}_j(t)$ are the velocity of the particles $i$
+and $j$ at any specific time, $\left\langle v_i^2 \right\rangle$ and $\left\langle v_j^2 \right\rangle$
+are the mean squared velocities of all particles of type $i$ and $j$, respectively.
+$\left\langle \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0) \right\rangle _r$ is a restricted
+statistical average defined as
+
+$$
+\frac{1}{N} \left\langle \sum_{j} \boldsymbol{v}_j(t) \cdot \boldsymbol{v}_i(0)
+\cdot u(R - r_{ij}(0)) \right\rangle_{i,t},
+$$
+
+where $u(x)$ is the step function, $r_{ij}(0)$ is the initial distance between the central
+particle $i$ and a particle $j$, and $N$ is the mean number of $j$
+particles in the spherical shell of a particle $i$.
+The cutoff radius $R$ for species $i$ and $j$ is usually set to the position of the first minimum of
+their center-of-mass radial distribution function (RDF).
+
+Usage: `python vccf.py -h`
+
+> [!TIP]
+> Example data files, particle_a.data and particle_b.data, is available in the example directory.
+> The required values to run the example can be found in the md.param file.
