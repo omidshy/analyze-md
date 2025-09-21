@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ''' ----------------------------------------------------------------------------------------
 vccf.py is a code for calculating particles' velocity cross-correlation functions (VACF)
 from molecular dynamics simulations.

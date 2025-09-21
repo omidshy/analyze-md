@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ''' ----------------------------------------------------------------------------------------
 visco.py is a code for calculating viscosity from molecular dynamics (MD) simulations.
 
