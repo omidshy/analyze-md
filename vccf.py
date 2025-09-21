@@ -14,9 +14,10 @@ import os, argparse
 import numpy as np
 import pandas as pd
 import freud
-import matplotlib.pyplot as plt
 from itertools import islice
 from tqdm import trange
+from utils import plot_results
+from vacf import acf
 
 # --------------------------------------------------------
 # Parse command-line arguments
@@ -94,43 +95,50 @@ def parse_arguments():
     return args
 
 
-# VACF using FFT
-def acf(velocities):
-    particles = velocities.shape[0]
-    steps = velocities.shape[2]
-    lag = int(steps * 0.1) # using 10% of the total lenght as max lag time (increase for shorter trajectories)
-
-    # nearest size with power of 2 (for efficiency) to zero-pad the input data
-    size = 2 ** np.ceil(np.log2(2*steps - 1)).astype('int')
-
-    vacf = np.zeros((particles, lag), dtype=np.float32)
-    for i in trange(particles, ncols=100, desc='Progress'):
-
-        # compute the FFT
-        Xfft = np.fft.fft(velocities[i, 0], size)
-        Yfft = np.fft.fft(velocities[i, 1], size)
-        Zfft = np.fft.fft(velocities[i, 2], size)
-
-        # get the power spectrum
-        Xpwr = Xfft.conjugate() * Xfft
-        Ypwr = Yfft.conjugate() * Yfft
-        Zpwr = Zfft.conjugate() * Zfft
-
-        # calculate the auto-correlation from inverse FFT of the power spectrum
-        Xcorr = np.fft.ifft(Xpwr)[:steps].real
-        Ycorr = np.fft.ifft(Ypwr)[:steps].real
-        Zcorr = np.fft.ifft(Zpwr)[:steps].real
-
-        autocorrelation = (Xcorr + Ycorr + Zcorr) / np.arange(steps, 0, -1)
-
-        vacf[i] = autocorrelation[:lag]
-
-    return np.mean(vacf, axis=0)
-
-
 # VCCF using a neighbors list
 def ccf(Avel, Bvel, Apos, Bpos, rmax, box, same=False):
+    """
+    Computes the velocity cross-correlation function (VCCF) for a set of particles,
+    which is a measure of how the velocity of a particle :math:`i` at a given time
+    is correlated with the velocity of particles :math:`j` at a later time.
 
+    Parameters
+    ----------
+    Avel : np.ndarray
+        A 3D NumPy array of particle velocities of shape (N, 3, M) where N is
+        the number of particles of type :math:`i`, 3 represents the x, y, z dimensions,
+        and M is the number of time steps.
+    Bvel : np.ndarray
+        A 3D NumPy array of particle velocities of shape (N, 3, M) where N is
+        the number of particles of type :math:`j`, 3 represents the x, y, z dimensions,
+        and M is the number of time steps.
+    Apos : np.ndarray
+        A 3D NumPy array of particle positions of shape (N, 3, M) where N is
+        the number of particles of type :math:`i`, 3 represents the x, y, z dimensions,
+        and M is the number of time steps.
+    Bpos : np.ndarray
+        A 3D NumPy array of particle positions of shape (N, 3, M) where N is
+        the number of particles of type :math:`j`, 3 represents the x, y, z dimensions,
+        and M is the number of time steps.
+    rmax : float
+        The cutoff radius around an :math:`i` particle within which the :math:`j` particles
+        considered as neighbors.
+    box : list of floats
+        Length of the 3 cell vectors of the simulation box.
+    same : bool
+        Are particles :math:`i` and :math:`j` the same type?
+
+    Returns
+    -------
+    crosscorrelation : np.ndarray
+        A 1D NumPy array representing the average VCCF of all :math:`i` particles and
+        a neighboring :math:`j` particle.
+    crosscorrelation_avg : np.ndarray
+        A 1D NumPy array representing the average VCCF of all :math:`i` particles averaged
+        over all neighboring :math:`j` particle.
+    num_nb : float
+        Average number of :math:`j` particles around an :math:`i` particle.
+    """
     lag = Avel.shape[2] // 10
     steps = Avel.shape[2] - lag
 
@@ -192,24 +200,8 @@ def ccf(Avel, Bvel, Apos, Bpos, rmax, box, same=False):
     # return (crosscorrelation / normFactor), (crosscorrelation_avg / normFactor), (num_nb / steps)
     return crosscorrelation/normFactor, crosscorrelation_avg/normFactor, num_nb/steps
 
-
-# Plot the cross(auto)-correlation functions
-def plot(acf_1, acf_2, ccf_1, ccf_2, time, same=False):
-    plt.figure(figsize=(11,6))
-    norm_acf = acf_1 / acf_1[0]
-    plt.plot(time[:norm_acf.shape[0]], norm_acf[:], label='VACF A', linestyle='dashed', color='gray')
-    plt.plot(time[:ccf_1.shape[0]], ccf_1[:], label='VCCF A-B', color='purple')
-    if not same:
-        norm_acf = acf_2 / acf_2[0]
-        plt.plot(time[:norm_acf.shape[0]], norm_acf[:], label='VACF B', linestyle='dashed', color='orange')
-        plt.plot(time[:ccf_2.shape[0]], ccf_2[:], label='VCCF B-A', color='green')
-    plt.xlabel('time [ps]')
-    plt.ylabel('⟨v(0).v(t)⟩')
-    plt.legend()
-    plt.show()
-
 # -----------------------------------------------------
-if __name__ == "__main__":
+def main():
     # Parse the command-line arguments
     args = parse_arguments()
 
@@ -225,7 +217,7 @@ if __name__ == "__main__":
     end_step = args.steps * args.timestep
     time_array = np.linspace(0, end_step, num=args.steps, dtype=float, endpoint=False)
 
-    # Read particle velocities from data files
+    # Read particle velocities and positions from data files
     print('\nReading the data files')
     pos_1 = np.zeros((args.particles_1, 3, args.steps), dtype=float)
     vel_1 = np.zeros((args.particles_1, 3, args.steps), dtype=float)
@@ -249,7 +241,7 @@ if __name__ == "__main__":
 
     # Compute correlation functions
     print('\nCalculating velocity correlation functions')
-    vacf_1 = acf(vel_1)
+    vacf_1 = acf(vel_1, 0.1) # using 10% of the total length as max lag time (increase for shorter trajectories)
     vccf_1, avg_vccf_1, num_nb_1 = ccf(
         vel_1,
         vel_2,
@@ -261,7 +253,7 @@ if __name__ == "__main__":
         )
 
     if not args.same:
-        vacf_2 = acf(vel_2)
+        vacf_2 = acf(vel_2, 0.1)
         vccf_2, avg_vccf_2, num_nb_2 = ccf(
             vel_2,
             vel_1,
@@ -275,9 +267,6 @@ if __name__ == "__main__":
     # Create a directory to save the results
     if not os.path.exists('results'):
         os.makedirs('results')
-    else:
-        for file in os.listdir('results'):
-            os.remove(os.path.join('results', file))
 
     # Save the velocity cross(auto)-correlation functions
     norm_acf = vacf_1 / vacf_1[0]
@@ -319,6 +308,52 @@ if __name__ == "__main__":
 
     # Plot correlation functions
     if args.same:
-        plot(vacf_1, vacf_1, vccf_1, vccf_1, time_array, args.same)
+        norm_acf_1 = vacf_1 / vacf_1[0]
+        data = [
+            {
+            'x': time_array[:norm_acf_1.shape[0]],
+            'y': norm_acf_1[:],
+            'label':'VACF A', 'linestyle':'dashed', 'color':'gray'
+            },
+            {
+            'x': time_array[:vccf_1.shape[0]],
+            'y': vccf_1[:],
+            'label':'VCCF A-B', 'linestyle':'solid', 'color':'purple'
+            }
+        ]
+        labels = {'x': 'Time [ps]','y': '⟨v(0).v(t)⟩'}
+
+        plot_results(data, labels)
+
     else:
-        plot(vacf_1, vacf_2, vccf_1, vccf_2, time_array)
+        norm_acf_1 = vacf_1 / vacf_1[0]
+        norm_acf_2 = vacf_2 / vacf_2[0]
+        data = [
+            {
+            'x': time_array[:norm_acf_1.shape[0]],
+            'y': norm_acf_1[:],
+            'label':'VACF A', 'linestyle':'dashed', 'color':'gray'
+            },
+            {
+            'x': time_array[:vccf_1.shape[0]],
+            'y': vccf_1[:],
+            'label':'VCCF A-B', 'linestyle':'solid', 'color':'purple'
+            },
+
+            {
+            'x': time_array[:norm_acf_2.shape[0]],
+            'y': norm_acf_2[:],
+            'label':'VACF B', 'linestyle':'dashed', 'color':'orange'
+            },
+            {
+            'x': time_array[:vccf_2.shape[0]],
+            'y': vccf_2[:],
+            'label':'VCCF B-A', 'linestyle':'solid', 'color':'green'
+            }
+        ]
+        labels = {'x': 'Time [ps]','y': '⟨v(0).v(t)⟩'}
+
+        plot_results(data, labels)
+
+if __name__ == "__main__":
+    main()

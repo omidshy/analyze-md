@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ''' ----------------------------------------------------------------------------------------
 vacf.py is a code for calculating self-diffusion coefficients from molecular 
 dynamics (MD) simulations. The self-diffusion coefficients are computed from 
@@ -14,11 +12,11 @@ Please cite: J. Phys. Chem. B 2022, 126, 18, 3439–3449. (DOI 10.1021/acs.jpcb.
 import os, argparse
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from itertools import islice
 from scipy import integrate
 from scipy.optimize import curve_fit
 from tqdm import trange
+from utils import plot_results
 
 # --------------------------------------------------------
 # Define conversion ratios from various velocity units to [m/s]
@@ -77,10 +75,36 @@ def parse_arguments():
     return args
 
 # Define VACF using FFT
-def acf(velocities):
+def acf(velocities, max_lag):
+    """
+    Computes the velocity autocorrelation function (VACF) for a set of particles,
+    which is a measure of how the velocity of a particle at a given time is
+    correlated with its velocity at a later time.
+
+    Parameters
+    ----------
+    velocities : np.ndarray
+        A 3D NumPy array of shape (N, 3, M) where N is the number of particles,
+        3 represents the x, y, z dimensions, and M is the number of time steps.
+    max_lag : float
+        Portion of the total simulation length to be used as maximum lag time.
+
+    Returns
+    -------
+    vacf : np.ndarray
+        A 1D NumPy array representing the average VACF over all particles.
+
+    Notes
+    -----
+    This implementation leverages the Wiener-Khinchin theorem, which states that
+    the autocorrelation of a signal is the inverse Fourier transform of its power
+    spectral density. This allows for a fast calculation of the autocorrelation.
+    The maximum lag time is set to 30% of the total number of steps, for better
+    statistics, as correlations often decay to zero long before this point.
+    """
     particles = velocities.shape[0]
     steps = velocities.shape[2]
-    lag = int(steps * 0.3) # using 30% of the total lenght as max lag time
+    lag = int(steps * max_lag)
 
     # nearest size with power of 2 (for efficiency) to zero-pad the input data
     size = 2 ** np.ceil(np.log2(2*steps - 1)).astype('int')
@@ -111,6 +135,40 @@ def acf(velocities):
 
 # Integrate the VACF and calculate the self-diffusion coefficient using the Green-Kubo relation
 def diffusion(vacf, time, timestep):
+    """
+    Calculates the diffusion coefficient from the velocity autocorrelation function (VACF).
+
+    Parameters
+    ----------
+    vacf : np.ndarray
+        The velocity autocorrelation function. This is a 2D NumPy array
+        representing the correlation over time.
+    time : np.ndarray
+        The time array corresponding to the VACF. This should be a 1D NumPy array
+        of the same length as ``vacf``.
+    timestep : float
+        The time step between consecutive points in the `time` array.
+
+    Returns
+    -------
+    integral : np.ndarray
+        The running integral of the VACF, divided by 3, representing a quantity
+        proportional to the mean squared displacement over time.
+    func : callable
+        The exponential function used for fitting. It has the form :math:`a + b e^{-c x}`.
+    opt : np.ndarray
+        The optimal parameters (:math:`a`, :math:`b`, :math:`c`) found by the curve fitting.
+    Rsqrd : float
+        The coefficient of determination (:math:`R^2`) for the exponential fit, indicating
+        how well the model fits the data.
+
+    Notes
+    -----
+    The diffusion coefficient (:math:`D`) is given by the long-time limit of the integral, which
+    corresponds to the parameter :math:`a` in the fitted function. Specifically, :math:`D = a`.
+    The VACF is divided by 3, assuming a 3-dimensional system, to relate it to the
+    mean squared displacement in one dimension.
+    """
     integral = integrate.cumulative_trapezoid(y=vacf/3, dx=timestep, initial=0)
 
     # fitting an exponential function to the running integral
@@ -129,28 +187,8 @@ def diffusion(vacf, time, timestep):
 
     return integral, func, opt, Rsqrd
 
-# Plot the VACF
-def plot_vacf(vacf, time):
-    plt.figure(figsize=(10,5))
-    plt.plot(time[:vacf.shape[0]], vacf/vacf[0], label='vacf')
-    plt.xlabel('time [ps]')
-    plt.ylabel('⟨v(0).v(t)⟩')
-    plt.legend()
-    plt.show()
-
-# Plot the running integral of VACF and fitted curve
-def plot_diffusion(integral, opt, func, time):
-    time = time[:integral.shape[0]]
-    plt.figure(figsize=(10,5))
-    plt.plot(time, integral, label='self-diffusion')
-    plt.plot(time, func(time, *opt), label='fit', linestyle='dashed', color='red')
-    plt.xlabel('time [ps]')
-    plt.ylabel('D [m^2/s]')
-    plt.legend()
-    plt.show()
-
 # -----------------------------------------------------
-if __name__ == "__main__":
+def main():
     # Parse the command-line arguments
     args = parse_arguments()
 
@@ -190,7 +228,7 @@ if __name__ == "__main__":
 
     # Compute VACF
     print('\nCalculating velocity auto-correlation function')
-    vacf = acf(velocities)
+    vacf = acf(velocities, 0.3) # using 30% of the total length as max lag time
 
     # Compute self-diffusion coefficient
     integral, func, opt, Rsqrd = diffusion(vacf, time_array, timestep)
@@ -219,7 +257,34 @@ if __name__ == "__main__":
     print(f'\ndiffusion coefficient = {opt[0]*(10**12):.6f} pm^2/ps  = {opt[0]:.4e} m^2/s')
 
     # Plot the VACF
-    plot_vacf(vacf, time_array)
+    data = [
+        {
+        'x': time_array[:vacf.shape[0]],
+        'y': vacf/vacf[0],
+        'label':'vacf', 'linestyle':'solid', 'color':'#9467bd'
+        }
+    ]
+    labels = {'x': 'Time (ps)','y': '⟨v(0).v(t)⟩'}
+
+    plot_results(data, labels)
 
     # Plot the running integral of VACF and fitted curve
-    plot_diffusion(integral, opt, func, time_array)
+    time = time_array[:integral.shape[0]]
+    data = [
+        {
+        'x': time,
+        'y': integral,
+        'label':'self-diffusion', 'linestyle':'solid', 'color':'#9467bd'
+        },
+        {
+        'x': time,
+        'y': func(time, *opt),
+        'label':'fit', 'linestyle':'dashed', 'color':'red'
+        }
+    ]
+    labels = {'x': 'Time (ps)','y': 'D [m^2/s]'}
+
+    plot_results(data, labels)
+
+if __name__ == "__main__":
+    main()

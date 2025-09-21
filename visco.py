@@ -18,10 +18,10 @@ Pxx, Pyy, Pzz, Pxy, Pxz, Pyz
 import os, argparse
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from scipy import integrate
 from scipy.constants import Boltzmann
 from tqdm import trange
+from utils import plot_results
 
 # --------------------------------------------------------
 # Define conversion ratios from various pressure units to Pascals (Pa)
@@ -119,6 +119,26 @@ def acf_(data):
 
 # Define autocorrelation using FFT
 def acf(data):
+    """
+    Computes the autocorrelation function (ACF) of a 1D signal.
+    The ACF measures the similarity between a signal and a time-shifted version of itself.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        A 1D NumPy array representing the input signal.
+
+    Returns
+    -------
+    np.ndarray
+        A 1D NumPy array containing the autocorrelation values up to a maximum lag of 30%
+        of the total number of steps.
+
+    Notes
+    -----
+    The ACF is calculated as the inverse FFT of the power spectral density (the squared
+    magnitude of the FFT).
+    """
     steps = data.shape[0]
     lag = int(steps * 0.3) # using 30% of the total steps as max correlation time
 
@@ -140,13 +160,30 @@ def acf(data):
 
 # Viscosity from the Einstein relation
 def einstein(P, time_array, timestep, volume, temperature):
-    '''
-    Calculate the viscosity from the Einstein relation
-    by integrating the components of the pressure tensor.
+    """
+    Calculates the viscosity using the Einstein relation by integrating
+    the components of the pressure tensor.
 
-    P components:
-    [0]: Pxx, [1]: Pyy, [2]: Pzz, [3]: Pxy, [4]: Pxz, [5]: Pyz
-    '''
+    Parameters
+    ----------
+    P : np.ndarray
+        A 2D array of shape (6, N), where N is the number of time steps.
+        It contains the six independent components of the pressure tensor.
+        `P[0]` to `P[5]` correspond to `Pxx`, `Pyy`, `Pzz`, `Pxy`, `Pxz`, and `Pyz`, respectively.
+    time_array : np.ndarray
+        A 1D array of time points corresponding to the pressure tensor data.
+    timestep : float
+        The time step between consecutive data points.
+    volume : float
+        The volume of the simulation box.
+    temperature : float
+        The temperature of the simulation.
+
+    Returns
+    -------
+    np.ndarray
+        A 1D array of viscosity values over time, in units of Pascal-seconds (Pa·s).
+    """
     Pxxyy = (P[0] - P[1]) / 2
     Pyyzz = (P[1] - P[2]) / 2
 
@@ -167,13 +204,33 @@ def einstein(P, time_array, timestep, volume, temperature):
 
 # Viscosity from the Green-Kubo relation
 def green_kubo(P, timestep, volume, temperature, use_diag):
-    '''
+    """
     Calculate the viscosity from the Green-Kubo relation
     by integrating the autocorrelation of components of the pressure tensor.
 
-    P components:
-    [0]: Pxx, [1]: Pyy, [2]: Pzz, [3]: Pxy, [4]: Pxz, [5]: Pyz
-    '''
+    Parameters
+    ----------
+    P : np.ndarray
+        A 2D array of shape (6, N), where N is the number of time steps.
+        It contains the six independent components of the pressure tensor.
+        `P[0]` to `P[5]` correspond to `Pxx`, `Pyy`, `Pzz`, `Pxy`, `Pxz`, and `Pyz`, respectively.
+    timestep : float
+        The time step between consecutive data points.
+    volume : float
+        The volume of the simulation box.
+    temperature : float
+        The temperature of the simulation.
+    use_diag : bool
+        If True, includes the off-diagonal shear components derived from
+        the diagonal pressure tensor components in the calculation.
+
+    Returns
+    -------
+    avg_acf : np.ndarray
+        The averaged autocorrelation function of the pressure tensor components.
+    viscosity : np.ndarray
+        The calculated viscosity over time in Pascal-seconds (Pa·s).
+    """
     # Calculate ACFs of off-diagonal components
     Pxy_acf = acf(P[3])
     Pxz_acf = acf(P[4])
@@ -200,7 +257,7 @@ def green_kubo(P, timestep, volume, temperature, use_diag):
     return avg_acf, viscosity
 
 # --------------------------------------------------------
-if __name__ == "__main__":
+def main():
     # Parse the command-line arguments
     args = parse_arguments()
 
@@ -252,15 +309,16 @@ if __name__ == "__main__":
 
     # Plot the running integral of viscosity
     if args.plot:
-        plt.figure(figsize=(10,5))
-        plt.plot(
-            time_array[:viscosity.shape[0]],
-            viscosity[:]*1000, label='Viscosity'
-            )
-        plt.xlabel('Time (ps)')
-        plt.ylabel('Viscosity (mPa.s)')
-        plt.legend()
-        plt.show()
+        data = [
+            {
+            'x': time_array[:viscosity.shape[0]],
+            'y': viscosity[:]*1000,
+            'label':'Viscosity', 'linestyle':'solid', 'color':'#9467bd'
+            }
+        ]
+        labels = {'x': 'Time (ps)','y': 'Viscosity (mPa.s)'}
+
+        plot_results(data, labels)
 
     # Save the running integral of viscosity as a csv file
     df = pd.DataFrame({
@@ -283,17 +341,17 @@ if __name__ == "__main__":
 
     # Plot the normalized average ACF
     if args.plot:
-        norm_avg_acf = avg_acf / avg_acf[0]
-        plt.figure(figsize=(10,5))
-        plt.plot(
-            time_array[:avg_acf.shape[0]],
-            norm_avg_acf[:], label='Average'
-            )
-        plt.xscale("log")
-        plt.xlabel('Time (ps)')
-        plt.ylabel('ACF')
-        plt.legend()
-        plt.show()
+        data = [
+            {
+            'x': time_array[:avg_acf.shape[0]],
+            'y': avg_acf/avg_acf[0],
+            'label':'Average', 'linestyle':'solid', 'color':'#9467bd'
+            }
+        ]
+        labels = {'x': 'Time (ps)','y': 'ACF'}
+        scales = {'x': 'log'}
+
+        plot_results(data, labels, scales)
 
     # Save the normalized average ACF as a csv file
     norm_avg_acf = avg_acf / avg_acf[0]
@@ -306,15 +364,16 @@ if __name__ == "__main__":
 
     # Plot the time evolution of the viscosity estimate
     if args.plot:
-        plt.figure(figsize=(10,5))
-        plt.plot(
-            time_array[:viscosity.shape[0]],
-            viscosity[:]*1000, label='Viscosity'
-            )
-        plt.xlabel('Time (ps)')
-        plt.ylabel('Viscosity (mPa.s)')
-        plt.legend()
-        plt.show()
+        data = [
+            {
+            'x': time_array[:viscosity.shape[0]],
+            'y': viscosity[:]*1000,
+            'label':'Viscosity', 'linestyle':'solid', 'color':'#9467bd'
+            }
+        ]
+        labels = {'x': 'Time (ps)','y': 'Viscosity (mPa.s)'}
+
+        plot_results(data, labels)
 
     # Save running integral of the viscosity as a csv file
     df = pd.DataFrame({
@@ -327,3 +386,6 @@ if __name__ == "__main__":
     print(f"Viscosity (Green-Kubo): {round((viscosity[-1] * 1000), 2)} [mPa.s]")
     print("Note: Do not trust these values!")
     print("You should fit an exponential function to the running integral and take its limit.")
+
+if __name__ == "__main__":
+    main()
